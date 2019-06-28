@@ -20,12 +20,13 @@ const (
 func main() {
 	var (
 		decrypt = flag.Bool("verbose", false, "")
-		export  = flag.Bool("export", true, "")
+		export  = flag.Bool("export", false, "Print into stdout export VAR=VALUE")
 		_       = flag.Bool("ignore", false, "Don't fail if error retrieving parameter")
 	)
 	flag.Parse()
 	args := flag.Args()
 	scope := os.Environ()
+
 	ssm := ssm.New(session.Must(awsSession()))
 
 	ssmVariables := make(map[string]string)
@@ -40,22 +41,24 @@ func main() {
 		}
 	}
 
-	fmt.Printf("scope %#v\n", variableNames)
+	// fmt.Printf("scope %#v\n", variableNames)
 
 	mapping, err := smmFetcher(ssm, variableNames, *decrypt, nil)
-	fmt.Printf("mapping %#v\n", mapping)
+	// fmt.Printf("mapping %#v\n", mapping)
 	fmt.Printf("err %#v\n", err)
 	switch {
 	case *export:
-
 		for name, val := range ssmVariables {
 			fmt.Printf("export %s=%s\n", name, mapping[val])
 		}
 		return
 	default:
-
+		for name, val := range ssmVariables {
+			os.Setenv(name, mapping[val])
+		}
+		return
 	}
-	must(syscall.Exec(args[1], args[1:], os.Environ()))
+	exitIf(syscall.Exec(args[1], args[1:], os.Environ()))
 }
 
 func awsSession() (*session.Session, error) {
@@ -63,7 +66,10 @@ func awsSession() (*session.Session, error) {
 	return sess, nil
 }
 
-func smmFetcher(session *ssm.SSM, names []string, decrypt bool, mapping map[string]string) (map[string]string, error) {
+func smmFetcher(session *ssm.SSM,
+	names []string,
+	decrypt bool,
+	mapping map[string]string) (map[string]string, error) {
 	if mapping == nil {
 		mapping = make(map[string]string)
 	}
@@ -104,7 +110,7 @@ func unPack(v string) (key, val string) {
 	return parts[0], parts[1]
 }
 
-func must(err error) {
+func exitIf(err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ssm-env: %v\n", err)
 		os.Exit(1)
