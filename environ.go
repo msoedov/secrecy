@@ -45,7 +45,7 @@ func main() {
 
 	mapping, err := smmFetcher(ssm, variableNames, *decrypt, nil)
 	// fmt.Printf("mapping %#v\n", mapping)
-	fmt.Printf("err %#v\n", err)
+	fmt.Printf("Fail %#v\n", err)
 	switch {
 	case *export:
 		for name, val := range ssmVariables {
@@ -68,14 +68,14 @@ func awsSession() (*session.Session, error) {
 
 func smmFetcher(session *ssm.SSM,
 	names []string,
-	decrypt bool,
-	mapping map[string]string) (map[string]string, error) {
-	if mapping == nil {
-		mapping = make(map[string]string)
+	shouldDecrypt bool,
+	variableMapping map[string]string) (map[string]string, error) {
+	if variableMapping == nil {
+		variableMapping = make(map[string]string)
 	}
 
 	input := ssm.GetParametersInput{
-		WithDecryption: aws.Bool(decrypt),
+		WithDecryption: aws.Bool(shouldDecrypt),
 	}
 	head := names
 	tail := names[:0]
@@ -89,20 +89,20 @@ func smmFetcher(session *ssm.SSM,
 
 	resp, err := session.GetParameters(&input)
 	if err != nil {
-		return mapping, err
+		return variableMapping, err
 	}
 
 	if len(resp.InvalidParameters) > 0 {
-		return mapping, fmt.Errorf("InvalidParameters:=%v", resp.InvalidParameters)
+		return variableMapping, fmt.Errorf("InvalidParameters:=%v", resp.InvalidParameters)
 	}
 
 	for _, p := range resp.Parameters {
-		mapping[*p.Name] = *p.Value
+		variableMapping[*p.Name] = *p.Value
 	}
 	if len(tail) > 0 {
-		return smmFetcher(session, tail, decrypt, mapping)
+		return smmFetcher(session, tail, shouldDecrypt, variableMapping)
 	}
-	return mapping, nil
+	return variableMapping, nil
 }
 
 func unPack(v string) (key, val string) {
