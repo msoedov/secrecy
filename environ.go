@@ -16,29 +16,9 @@ func main() {
 		_ = flag.Bool("ignore", false, "Don't fail if error retrieving parameter")
 	)
 	flag.Parse()
-	// AWS_SDK_LOAD_CONFIG=1
-
-	// args := flag.Args()
-	// scope := os.Environ()
-
-	// ssm := ssm.New(session.Must(awsSession()))
-
-	// ssmVariables := make(map[string]string)
-
-	// variableNames := []string{}
-	// for _, pair := range scope {
-	// 	if strings.Contains(pair, "ssm:") {
-	// 		localName, ssmVarName := unPack(pair)
-	// 		ssmVarName = ssmVarName[len("ssm:"):]
-	// 		ssmVariables[localName] = ssmVarName
-	// 		variableNames = append(variableNames, ssmVarName)
-	// 	}
-	// }
-
-	// fmt.Printf("scope %#v\n", variableNames)
-
-	mapping := vars.Do(true)
-	fmt.Printf("mapping %#v\n", mapping)
+	mapping, err := vars.InstrumentEnv(true)
+	exitIf(err)
+	fmt.Printf("Instrumented %#v\n", mapping)
 	// exitIf(syscall.Exec(args[1], args[1:], os.Environ()))
 }
 

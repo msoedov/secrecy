@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -16,27 +17,29 @@ const (
 
 type Env map[string]string
 
-func Do(export bool) Env {
+func InstrumentEnv(export bool) (Env, error) {
 	ssm := ssm.New(session.Must(awsSession()))
 	variableNames, ssmVariables := defaultVariableDiscovery()
+	if len(variableNames) == 0 {
+		return *new(Env), nil
+	}
 	mapping, err := SmmFetcher(ssm, variableNames, false, nil)
 	if err != nil {
-		fmt.Printf("Fail %#v\n", err)
-		return nil
+		return nil, errors.Wrap(err, "Failed to load param")
 	}
 	switch {
 	case export:
 		for name, val := range ssmVariables {
 			fmt.Printf("export %s=%s\n", name, mapping[val])
 		}
-		return mapping
+		return mapping, nil
 	default:
 		for name, val := range ssmVariables {
 			os.Setenv(name, mapping[val])
 		}
-		return mapping
+		return mapping, nil
 	}
-	return mapping
+	return mapping, nil
 }
 
 func awsSession() (*session.Session, error) {
@@ -44,6 +47,7 @@ func awsSession() (*session.Session, error) {
 	return sess, nil
 }
 
+// SmmFetcher fetch ssm params from a given mapping
 func SmmFetcher(session *ssm.SSM,
 	names []string,
 	shouldDecrypt bool,
@@ -67,11 +71,11 @@ func SmmFetcher(session *ssm.SSM,
 
 	resp, err := session.GetParameters(&input)
 	if err != nil {
-		return variableMapping, err
+		return variableMapping, errors.Wrapf(err, "Input=%v", input)
 	}
 
 	if len(resp.InvalidParameters) > 0 {
-		return variableMapping, fmt.Errorf("InvalidParameters:=%v", resp.InvalidParameters)
+		return variableMapping, fmt.Errorf("InvalidParameters:=%v and input=%v", resp.InvalidParameters, input)
 	}
 
 	for _, p := range resp.Parameters {
