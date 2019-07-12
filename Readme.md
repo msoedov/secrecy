@@ -6,7 +6,7 @@ Ultralight AWS Parameter Store variables instrumentation
 
 ```shell
 export FOO=ssm:SSM_PARAM
-`environ`
+`secrecy`
 echo $FOO
 SSM_VALUE:)
 ```
@@ -23,7 +23,7 @@ export FOO=SSM_VALUE:)
 ## Install
 
 ```shell
-go get -u github.com/msoedov/environ
+go get -u github.com/msoedov/secrecy
 ```
 
 ## Configuration

@@ -12,7 +12,7 @@ import (
 var (
 	verbose = flag.Bool("verbose", true, "")
 	_       = flag.Bool("export", false, "Print into stdout export VAR=VALUE")
-	_       = flag.Bool("ignore", false, "Don't fail if error retrieving parameter")
+	ignore  = flag.Bool("ignore", false, "Don't fail if error retrieving parameter")
 )
 
 func main() {
@@ -30,6 +30,9 @@ func main() {
 }
 
 func exitIf(err error) {
+	if *ignore {
+		return
+	}
 	if err != nil {
 		log.Fatalf("secrecy-env: %v\n", err)
 		os.Exit(1)
