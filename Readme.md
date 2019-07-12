@@ -1,4 +1,4 @@
-# Environ
+# Secrecy
 
 Ultralight AWS Parameter Store variables instrumentation
 
@@ -15,7 +15,7 @@ How this works:
 
 ```shell
 export FOO=ssm:SSM_PARAM
-environ
+secrecy
 # stdout
 export FOO=SSM_VALUE:)
 ```
