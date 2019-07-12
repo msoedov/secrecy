@@ -1,6 +1,12 @@
 # Secrecy
 
-Ultralight AWS Parameter Store variables instrumentation
+Ultralight AWS Parameter Store variables instrumentation on AWS instances
+
+### Features
+
+Written in simple Go
+No installation necessary - binary is provided
+Intuitive and easy to use
 
 ## Usage
 
@@ -32,3 +38,7 @@ go get -u github.com/msoedov/secrecy
 # Optional as per aws/aws-sdk-go#configuring-credentials
 AWS_SDK_LOAD_CONFIG=1
 ```
+
+### Docker instrumentation
+
+TBD
