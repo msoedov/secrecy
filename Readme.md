@@ -5,8 +5,12 @@ Ultralight AWS Parameter Store variables instrumentation on AWS instances
 ### Features
 
 Written in simple Go
+
 No installation necessary - binary is provided
+
 Intuitive and easy to use
+
+Efficient batching
 
 ## Usage
 
