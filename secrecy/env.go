@@ -1,4 +1,4 @@
-package vars
+package secrecy
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ func InstrumentEnv(export bool) (Env, error) {
 	if len(variableNames) == 0 {
 		return *new(Env), nil
 	}
-	mapping, err := SmmFetcher(ssm, variableNames, false, nil)
+	mapping, err := SmmFetcher(ssm, variableNames, true, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to load param")
 	}
@@ -105,4 +105,21 @@ func defaultVariableDiscovery() ([]string, Env) {
 		}
 	}
 	return variableNames, ssmVariables
+}
+
+func MaskValues(secrets Env) Env {
+	secured := make(Env)
+	for name, secret := range secrets {
+		secured[name] = maskText(secret)
+	}
+	return secured
+}
+
+func maskText(secret string) string {
+	switch {
+	case len(secret) < 3:
+		return "***"
+	default:
+		return secret[:1] + "******" + secret[len(secret)-2:]
+	}
 }

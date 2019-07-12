@@ -2,29 +2,36 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	_ "github.com/aws/aws-sdk-go/aws/ec2metadata"
-	"github.com/msoedov/environ/vars"
+	"github.com/msoedov/environ/secrecy"
+	log "github.com/sirupsen/logrus"
+)
+
+var (
+	verbose = flag.Bool("verbose", true, "")
+	_       = flag.Bool("export", false, "Print into stdout export VAR=VALUE")
+	_       = flag.Bool("ignore", false, "Don't fail if error retrieving parameter")
 )
 
 func main() {
-	var (
-		_ = flag.Bool("verbose", false, "")
-		_ = flag.Bool("export", false, "Print into stdout export VAR=VALUE")
-		_ = flag.Bool("ignore", false, "Don't fail if error retrieving parameter")
-	)
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+	log.SetOutput(os.Stderr)
+
 	flag.Parse()
-	mapping, err := vars.InstrumentEnv(true)
+	mapping, err := secrecy.InstrumentEnv(true)
 	exitIf(err)
-	fmt.Printf("Instrumented %#v\n", mapping)
-	// exitIf(syscall.Exec(args[1], args[1:], os.Environ()))
+	if *verbose {
+		log.Infof("Instrumented %#v\n", secrecy.MaskValues(mapping))
+	}
 }
 
 func exitIf(err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ssm-env: %v\n", err)
+		log.Fatalf("secrecy-env: %v\n", err)
 		os.Exit(1)
 	}
 }
